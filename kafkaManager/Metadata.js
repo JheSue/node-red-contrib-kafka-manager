@@ -3,7 +3,7 @@ const filterArray=require("./filterArray.js");
 
 const 	compareTopicsNew=(source,target)=>target.filter(s=>undefined==source.find(t=>s.topic==t.topic&&s.partition==t.partition))
 
-function Metadata (broker,logger=new (require("node-red-contrib-logger"))("Metadata")) {
+function Metadata (broker,logger=new (require("node-red-contrib-logger"))("Metadata",10, true,"error")) {
 	this.broker=broker;
 	this.logger=logger;
 	this.refreshStack=[];

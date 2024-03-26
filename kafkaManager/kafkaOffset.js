@@ -1,4 +1,4 @@
-const logger = new (require("node-red-contrib-logger"))("Kafka Offset");
+const logger = new (require("node-red-contrib-logger"))("Kafka Offset",10, true,"error");
 logger.sendInfo("Copyright 2020 Jaroslav Peter Prib");
 
 function msgProcess (node, msg, err, data) {

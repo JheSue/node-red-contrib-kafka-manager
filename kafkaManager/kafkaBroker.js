@@ -1,4 +1,4 @@
-const logger = new (require("node-red-contrib-logger"))("Kafka Broker");
+const logger = new (require("node-red-contrib-logger"))("Kafka Broker",10, true,"error");
 logger.sendInfo("Copyright 2020 Jaroslav Peter Prib");
 const Metadata=require("./Metadata.js");
 let kafka;

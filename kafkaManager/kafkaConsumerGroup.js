@@ -1,4 +1,4 @@
-const logger = new (require("node-red-contrib-logger"))("Kafka Consumer Group");
+const logger = new (require("node-red-contrib-logger"))("Kafka Consumer Group",10, true,"error");
 logger.sendInfo("Copyright 2020 Jaroslav Peter Prib");
 
 let kafka;

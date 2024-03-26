@@ -1,11 +1,13 @@
-const logger = new (require("node-red-contrib-logger"))("Kafka Consumer");
+const logger = new (require("node-red-contrib-logger"))("Kafka Consumer",10, true,"error");
 logger.sendInfo("Copyright 2020 Jaroslav Peter Prib");
 //const filterArray=require("./filterArray.js");
 
 let kafka;
 
 function sendMessage(node, message) {
-	node.brokerNode.sendMsg(node, node.convertToJson?JSON.parse(message.value):message)
+	//node.brokerNode.sendMsg(node, node.convertToJson?JSON.parse(message.value):message)
+	message.value = node.convertToJson?JSON.parse(message.value):message.value;
+        node.brokerNode.sendMsg(node, message);
 }
 function connect (node) {
 	if(logger.active) logger.send({label: 'connect',node: node.id})

@@ -1,4 +1,4 @@
-const logger = new (require("node-red-contrib-logger"))("Kafka Commit");
+const logger = new (require("node-red-contrib-logger"))("Kafka Commit",10, true,"error");
 logger.sendInfo("Copyright 2020 Jaroslav Peter Prib");
 
 module.exports = function (RED) {
