@@ -3,8 +3,8 @@ logger.sendInfo("Copyright 2020 Jaroslav Peter Prib");
 
 let kafka;
 
-function producerSend (node, msgIn, retry) {
-	if(logger.active) logger.send({label:'producerSend',node:node.id,retry:retry});
+function producerSend (node, msgIn, done, retry) {
+	if(logger.active) logger.send({label:'producerSend',node:node.id, done: node.done, retry:retry});
 /*
 	//				node.KeyedMessage = kafka.KeyedMessage
 	//	km = new KeyedMessage('key', 'message'),
@@ -51,20 +51,20 @@ attributes:
 						node.inError = true
 						node.queueMsg(msg, true)
 						if (retry) {
-							setInError(node, 'retry failed')
+							setInError(node, msg, 'retry failed')
 							return
 						}
 						if (node.producer && node.producer.refreshMetadata) {
 							node.log('issuing refreshMetadata as may be issue with caching')
 							node.producer.refreshMetadata(topic, (err) => {
 								if (err) {
-									setInError(node, errmsg)
+									setInError(node, msg, errmsg)
 									return
 								}
 								if (node.waiting.length) {
 									node.status({fill:'yellow',shape:'ring',text:'trying sending ' + node.waiting.length + ' queued messages'})
 								}
-								producerSend(node, undefined, (retry || 1))
+								producerSend(node, undefined, undefined, (retry || 1))
 								if (node.waiting.length) {
 									node.status({fill:'red',shape:'ring',text:'retry send to Kafka failed, ' + node.waiting.length + ' queued messages'})
 								} else {
@@ -73,24 +73,30 @@ attributes:
 							})
 						} else {
 							node.connected = false
-							producerSend(node, undefined, (retry || 1))
+							producerSend(node, undefined, undefined, (retry || 1))
 						}
 					}
-					setInError(node, errmsg)
+					setInError(node, msg, errmsg)
 				} else if (node.inError) {
 					node.inError = false
 					node.status({	fill:'green',shape: 'ring',text: 'Connected to ' + node.brokerNode.name})
 				}
 			})
+			if (!node.inError){
+				node.send(msg);
+				if (done) {
+					done();
+				}
+			}
 	} catch (e) {
 		node.inError = true
-		node.error(e)
+		node.error(e, msg)
 		node.status({fill:'yellow',shape:'ring',text:'send error ' + e.toString()})
 	}
 }
 
-function setInError (node, errmsg) {
-	node.error(errmsg)
+function setInError (node, msg, errmsg) {
+	node.error(errmsg, msg)
 	node.status({fill:'yellow',shape: 'ring',text: 'send error ' + errmsg	})
 	node.inError = true
 }
@@ -116,7 +122,7 @@ function connect (node) {
 		node.status({fill:'green',shape:'ring',text:'Connected to ' + node.brokerNode.name})
 		node.connected = true
 		node.log('connected and processing ' + node.waiting.length + ' messages')
-		producerSend(node, undefined)
+		producerSend(node, undefined, undefined)
 	})
 }
 
@@ -161,11 +167,11 @@ module.exports = function (RED) {
 				node.status({fill: 'red',shape: 'ring',text: warning	})
 			}
 		}
-		node.on('input', function (msg) {
+		node.on('input', function (msg, send, done) {
 			if(node.topicSlash2dot && msg.topic) msg.topic= msg.topic.replace("/",".")
 			if(node.convertFromJson) 	msg.payload = JSON.stringify(msg.payload)
 			if (node.connected) {
-				producerSend(node, msg)
+				producerSend(node, msg, done)
 				return
 			}
 			node.queueMsg(msg)
